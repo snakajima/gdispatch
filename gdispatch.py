@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Title:     gdispatch 
+# Author:    Satoshi Nakajima
+# Hosted at: http://github.com/snakajima/gdispatch
+# Licence:   MIT License
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
