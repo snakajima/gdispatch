@@ -1,1 +1,16 @@
-test
+gdispatch is a simple python module that enables in-place routing instruction right above each RequestHandler.
+
+Example:
+
+@gdispatch.routing(lambda:('/login', LoginHandler))
+class LoginHandler(webapp.RequestHandler):
+    def post(self):
+        ...    
+
+@gdispatch.routing(lambda:('/login', LogoutHandler))
+class LogoutHandler(webapp.RequestHandler):
+    def get(self):
+        ...
+
+gdispatch.run()
+
