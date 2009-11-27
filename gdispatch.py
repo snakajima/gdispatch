@@ -64,4 +64,13 @@ def get_application(debug=True):
     """ For unit testing """
     return webapp.WSGIApplication(_url_mapping(), debug=debug)
 
+def kwargs(original_func):
+    """ This decorator allows RequestHandlers to receive get/post parameters as named arguments """
+    import inspect
+    argspec = inspect.getargspec(original_func) 
+    args = tuple(argspec[0][1:])
+    def decorated_func(rh):
+        kwargs = dict([(arg, rh.request.get(arg)) for arg in args])
+        return original_func(rh, **kwargs)
+    return decorated_func
 
