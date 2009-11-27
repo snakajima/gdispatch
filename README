@@ -1,13 +1,15 @@
 gdispatch is a simple python module that enables in-place routing instruction right above each RequestHandler.
+It also allows RequestHandler to recieve GET/POST parameters as function arguments
 
 Example:
 
 @gdispatch.routing(lambda:('/login', LoginHandler))
 class LoginHandler(webapp.RequestHandler):
-    def post(self):
+    @gdispatch.kwargs
+    def post(self, name, password):
         ...    
 
-@gdispatch.routing(lambda:('/login', LogoutHandler))
+@gdispatch.routing(lambda:('/logout', LogoutHandler))
 class LogoutHandler(webapp.RequestHandler):
     def get(self):
         ...
