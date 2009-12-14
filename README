@@ -3,13 +3,13 @@ It also allows RequestHandler to recieve GET/POST parameters as function argumen
 
 Example:
 
-@gdispatch.routing(lambda:('/login', LoginHandler))
+@gdispatch.route(lambda:('/login', LoginHandler))
 class LoginHandler(webapp.RequestHandler):
     @gdispatch.kwargs
     def post(self, name, password):
         ...    
 
-@gdispatch.routing(lambda:('/logout', LogoutHandler))
+@gdispatch.route(lambda:('/logout', LogoutHandler))
 class LogoutHandler(webapp.RequestHandler):
     def get(self):
         ...
