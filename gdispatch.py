@@ -2,7 +2,7 @@
 #
 # Hosted at: http://github.com/snakajima/gdispatch
 #
-# Copyright (c) 2009 Satoshi Nakajima
+# Copyright (c) 2009, 2010, 2011 Satoshi Nakajima
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,12 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import logging
+import os
+
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from google.appengine.ext import db
 
 def memoize(original_func):
     """ This decorator memorize cached data in global memory """
@@ -37,32 +41,13 @@ def memoize(original_func):
     return decorated_func
 
 @memoize
-def _routing_functions():
-    """ List of routing functions. Singleton. """
-    return []
+def is_development():
+    return os.environ['SERVER_SOFTWARE'].startswith('Development/')
 
-def route(callback_func):
-    """ This simply registers a routing function, which returns a 
-        (url, request_handler_class) tuple.
-        Later, we call each function to generate the URL mapping.
-        This defered registration mechanism allows developers to put
-        dispatch.route() BEFORE the definition of the RequestHandler
-        class.
-    """
-    _routing_functions().append(callback_func)
-
-@memoize
-def _url_mapping():
-    """ The list of (url, request_handler_class) tuples. Singleton. """
-    return [f() for f in _routing_functions()]
-    
-def run(debug=True):
-    application = webapp.WSGIApplication(_url_mapping(), debug=debug)
-    run_wsgi_app(application)
-
-def get_application(debug=True):
-    """ For unit testing """
-    return webapp.WSGIApplication(_url_mapping(), debug=debug)
+def transactional(original_func):
+    def decorated_func(*args, **kwargs):
+        return db.run_in_transaction(original_func, *args, **kwargs)
+    return decorated_func
 
 def kwargs(original_func):
     """ This decorator allows RequestHandlers to receive get/post parameters as named arguments """
@@ -73,4 +58,28 @@ def kwargs(original_func):
         kwargs = dict([(arg, rh.request.get(arg)) for arg in args])
         return original_func(rh, **kwargs)
     return decorated_func
+
+@memoize
+def _routing_functions(namespace):
+    """ List of routing functions. Singleton. """
+    return []
+    
+def route(callback_func, namespace=None):
+    """ This simply registers a routing function, which returns a 
+        (url, request_handler_class) tuple.
+        Later, we call each function to generate the URL mapping.
+        This defered registration mechanism allows developers to put
+        dispatch.route() BEFORE the definition of the RequestHandler
+        class.
+    """
+    _routing_functions(namespace).append(callback_func)
+
+@memoize
+def _url_mapping(namespace):
+    """ The list of (url, request_handler_class) tuples. Singleton. """
+    return [f() for f in _routing_functions(namespace)]
+    
+def run(namespace=None):
+    application = webapp.WSGIApplication(_url_mapping(namespace), debug=True)
+    run_wsgi_app(application)
 
